@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+
+// const data = require('../data.json')
+
 mongoose.connect('mongodb://localhost/fetcher', (err)=>{
   if(err) {
     console.log(err)
@@ -25,7 +28,6 @@ let repoSchema = mongoose.Schema({
   githubLoginId: {
     type: Number,
     required: true,
-    unique: true,
   },
   githubLogin: {
     type: String,
@@ -41,7 +43,8 @@ let save = (data, callback) => {
   // for (let i=0;i<data.length;i++) {
 
   // }
-  data.map((eachRepo)=>{
+  console.log(data.data)
+  var allDocuments = data.data.map((eachRepo)=>{
     let data = eachRepo
     var repo = new Repo ({
       id: data.id,
@@ -52,8 +55,19 @@ let save = (data, callback) => {
       githubLoginId: data.owner.id,
       githubLogin: data.owner.login
     })
-    return
+    return repo;
   })
+  console.log('allDocuments', allDocuments)
+  Repo.insertMany(allDocuments)
+    .then((response)=> {
+      console.log('resonse', response)
+      callback(response)
+    })
+    .catch((err)=>{
+      console.log('err from database response', err)
+    })
+
+
   // var repo = new Repo ({
   //   id: data.id,
   //   name: data.name,
@@ -67,5 +81,29 @@ let save = (data, callback) => {
   // This function should save a repo or repos to
   // the MongoDB
 }
+let get25 = (callback)=>{
+  Repo.find().sort({forks_count: -1}).limit(25)
+    .then((response)=>{
+      callback(response)
+    })
+    .catch((err)=>{
+      console.log('err from database response for get', err)
+    })
+}
 
+//havnt used this! think about using it when you need to see how many repos you've saved in database!
+let getAll =(callback)=>{
+
+  Repo.find().sort({forks_count: -1})
+    .then((response)=>{
+      console.log(response.length)
+      callback(response)
+    })
+    .catch((err)=>{
+      console.log('err from database response for getall', err)
+    })
+}
+// save(data, (res)=>{console.log(res)})
+module.exports.get25 = get25;
 module.exports.save = save;
+module.exports.getAll = getAll;
